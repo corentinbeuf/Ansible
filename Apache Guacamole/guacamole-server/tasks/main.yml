@@ -1,0 +1,79 @@
+---
+# tasks file for guacamole-server
+
+- name: Update sources
+  apt:
+    update_cache: yes
+
+- name: Install requirements
+  apt:
+    name: 
+      - build-essential
+      - libcairo2-dev 
+      - libjpeg62-turbo-dev
+      - libpng-dev
+      - libtool-bin
+      - uuid-dev
+      - libossp-uuid-dev
+      - libavcodec-dev
+      - libavformat-dev
+      - libavutil-dev
+      - libswscale-dev
+      - freerdp2-dev
+      - libpango1.0-dev
+      - libssh2-1-dev
+      - libtelnet-dev
+      - libvncserver-dev
+      - libwebsockets-dev
+      - libpulse-dev
+      - libssl-dev
+      - libvorbis-dev
+      - libwebp-dev
+      - sudo
+      - unzip
+    state: present
+    update_cache: yes
+
+- name: Update sources
+  apt:
+    update_cache: yes
+
+- name: Download Apache Guacamole server archive
+  get_url:
+    url: https://downloads.apache.org/guacamole/1.5.5/source/guacamole-server-1.5.5.tar.gz
+    dest: /tmp/guacamole-server-1.5.5.tar.gz
+
+- name: Unarchive Apache Guacamole server archive
+  ansible.builtin.unarchive:
+    src: /tmp/guacamole-server-1.5.5.tar.gz
+    dest: /tmp/guacamole-server-1.5.5
+    remote_src: yes
+
+- name: Prepare compilation of Apache Guacamole server
+  shell: cd /tmp/guacamole-server-1.5.5 && ./configure --with-systemd-dir=/etc/systemd/system/
+
+- name: Compile source code
+  shell: cd /tmp/guacamole-server-1.5.5 && make
+
+- name: Install Apache Guacamole server componant
+  shell: cd /tmp/guacamole-server-1.5.5 && make install
+
+- name: Update links between Apache Guacamole server and libraries
+  shell: cd /tmp/guacamole-server-1.5.5 && ldconfig
+
+- name: Restart daemon and enable guacd service
+  ansible.builtin.systemd_service:
+    name: guacd
+    enabled: yes
+    daemon_reload: true
+    masked: no
+
+- name: Create extension folder
+  file:
+    path: /etc/guacamole/lib
+    state: directory
+
+- name: Create lib folder
+  file:
+    path: /etc/guacamole/lib
+    state: directory
