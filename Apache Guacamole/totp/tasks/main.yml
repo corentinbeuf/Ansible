@@ -1,0 +1,36 @@
+---
+# tasks file for totp
+
+- name: Download Apache Guacamole TOTP extension
+  get_url:
+    url: https://downloads.apache.org/guacamole/1.5.5/binary/guacamole-auth-totp-1.5.5.tar.gz
+    dest: /tmp/guacamole-auth-totp-1.5.5.tar.gz
+
+- name: Unarchive TOTP extension
+  ansible.builtin.unarchive:
+    src: /tmp/guacamole-auth-totp-1.5.5.tar.gz
+    dest: /tmp/guacamole-auth-totp-1.5.5
+    remote_src: yes
+
+- name: Copy TOTP extension in Apache Guacamole folder
+  copy:
+    src: /tmp/guacamole-auth-totp-1.5.5/guacamole-auth-totp-1.5.5.jar
+    dest: /etc/guacamole/extensions/guacamole-auth-totp-1.5.5.jar
+    remote_src: yes
+
+- name: Add database information in "guacamole.properties" file
+  blockinfile:
+    path: /etc/guacamole/guacamole.properties
+    prepend_newline: true
+    block: |
+      # TOTP
+      totp-issuer: Guacamole CBF
+      totp-digits: 6
+      totp-period: 30
+      totp-mode: sha1
+
+- name: Restart tomcat service
+  ansible.builtin.systemd_service:
+    name: tomcat9
+    state: restarted
+    masked: no

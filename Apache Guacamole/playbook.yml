@@ -4,3 +4,4 @@
     - role: guacamole-server
     - role: guacamole-client
     - role: mysql
+    - role: totp
