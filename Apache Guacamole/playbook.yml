@@ -3,3 +3,4 @@
   roles:
     - role: guacamole-server
     - role: guacamole-client
+    - role: mysql
