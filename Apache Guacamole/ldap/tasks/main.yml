@@ -1,0 +1,49 @@
+---
+# tasks file for ldap
+
+- name: Download Apache Guacamole LDAP extension
+  get_url:
+    url: https://downloads.apache.org/guacamole/1.5.2/binary/guacamole-auth-ldap-1.5.2.tar.gz
+    dest: /tmp/guacamole-auth-ldap-1.5.2.tar.gz
+
+- name: Unarchive LDAP extension
+  ansible.builtin.unarchive:
+    src: /tmp/guacamole-auth-ldap-1.5.2.tar.gz
+    dest: /tmp/
+    remote_src: yes
+
+- name: Copy TOTP extension in Apache Guacamole folder
+  copy:
+    src: /tmp/guacamole-auth-ldap-1.5.2/guacamole-auth-ldap-1.5.2.jar
+    dest: /etc/guacamole/extensions/guacamole-auth-ldap-1.5.2.jar
+    remote_src: yes
+
+- name: Add LDAP information in "guacamole.properties" file
+  blockinfile:
+    path: /etc/guacamole/guacamole.properties
+#    prepend_newline: true
+    block: |
+      ### Active Directory
+      # Controleur de domaine
+      ldap-hostname: ldap.example.lan
+      ldap-port: 389
+      ldap-encryption-method: none
+
+      # Utilisateur pour connexion AD
+      ldap-search-bind-dn: Sync_Guacamole@example.lan
+      ldap-search-bind-password: P@ssword!
+
+      # Recherche des utilisateurs
+      ldap-user-base-dn: OU=Administration,DC=example,DC=lan
+      ldap-username-attribute: sAMAccountName
+      #ldap-user-search-filter:
+
+      # Recherche des groupes
+      #ldap-group-base-dn: OU=Administration,DC=example,DC=lan
+      #ldap-group-search-filter: (objectClass=Group)
+
+- name: Restart tomcat service
+  ansible.builtin.systemd_service:
+    name: tomcat9
+    state: restarted
+    masked: no

@@ -5,3 +5,4 @@
     - role: guacamole-client
     - role: mysql
     - role: totp
+    - role: ldap
