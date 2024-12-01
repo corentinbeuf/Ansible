@@ -9,7 +9,7 @@
 - name: Unarchive TOTP extension
   ansible.builtin.unarchive:
     src: /tmp/guacamole-auth-totp-1.5.5.tar.gz
-    dest: /tmp/guacamole-auth-totp-1.5.5
+    dest: /tmp/
     remote_src: yes
 
 - name: Copy TOTP extension in Apache Guacamole folder
@@ -21,7 +21,7 @@
 - name: Add database information in "guacamole.properties" file
   blockinfile:
     path: /etc/guacamole/guacamole.properties
-    prepend_newline: true
+#    prepend_newline: true
     block: |
       # TOTP
       totp-issuer: Guacamole CBF
