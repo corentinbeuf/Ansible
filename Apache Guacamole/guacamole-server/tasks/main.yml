@@ -46,8 +46,7 @@
 - name: Unarchive Apache Guacamole server archive
   ansible.builtin.unarchive:
     src: /tmp/guacamole-server-1.5.5.tar.gz
-    dest: /tmp/guacamole-server-1.5.5
-    remote_src: yes
+    dest: /tmp/
 
 - name: Prepare compilation of Apache Guacamole server
   shell: cd /tmp/guacamole-server-1.5.5 && ./configure --with-systemd-dir=/etc/systemd/system/
@@ -70,7 +69,7 @@
 
 - name: Create extension folder
   file:
-    path: /etc/guacamole/lib
+    path: /etc/guacamole/extensions
     state: directory
 
 - name: Create lib folder
