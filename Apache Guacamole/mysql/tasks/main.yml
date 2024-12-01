@@ -7,10 +7,16 @@
     state: present
     update_cache: yes
 
-- name: Install python3-pip package
+- name: Install python3 packages
   apt:
-    name: python3-pip
+    name: 
+      - python3-pip
+      - python3-venv
+      - python3-mysqldb
     state: present
+
+- name: Create virtualenv
+  shell: python3 -m venv /home/administrateur/venv
 
 - name: Install Ansible & pymysql
   pip:
@@ -18,12 +24,13 @@
       - ansible
       - pymysql
     state: present
+    virtualenv: /home/administrateur/venv
 
 - name: Install community.mysql collection
   shell: ansible-galaxy collection install community.mysql
 
 - name: Set mysql root pass
-  shell: mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ MYSQL_ROOT_PASSWORD }}';"
+  shell: mysql -e "SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{{ MYSQL_ROOT_PASSWORD }}');"
 
 - name: Disable remote root login
   mysql_user:
@@ -104,7 +111,7 @@
 - name: Unarchive JDBC extension
   ansible.builtin.unarchive:
     src: /tmp/guacamole-auth-jdbc-1.5.5.tar.gz
-    dest: /tmp/guacamole-auth-jdbc-1.5.5
+    dest: /tmp/
     remote_src: yes
 
 - name: Copy JDBC in Apache Guacamole extension folder
@@ -113,15 +120,14 @@
     dest: /etc/guacamole/extensions/guacamole-auth-jdbc-mysql-1.5.5.jar
     remote_src: yes
 
+# Need to use shell module because an 404 error is present when get_url module is used
 - name: Download MySQL connector
-  get_url:
-    url: https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j-9.1.0.tar.gz
-    dest: /tmp/mysql-connector-j-9.1.0.tar.gz
+  shell: cd /tmp && wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-j-9.1.0.tar.gz
 
 - name: Unarchive MySQL connector
   ansible.builtin.unarchive:
     src: /tmp/mysql-connector-j-9.1.0.tar.gz
-    dest: /tmp/mysql-connector-j-9.1.0
+    dest: /tmp/
     remote_src: yes
 
 - name: Copy MySQL connector in Apache Guacamole folder
@@ -134,19 +140,9 @@
   shell: cat /tmp/guacamole-auth-jdbc-1.5.5/mysql/schema/*.sql | mysql -u root -p{{ MYSQL_ROOT_PASSWORD }} guacadb
 
 - name: Add database information in "guacamole.properties" file
-  # copy:
-  #   dest: /etc/guacamole/guacamole.properties
-  #   content: |
-  #     # MySQL
-  #     mysql-hostname: 127.0.0.1
-  #     mysql-port: 3306
-  #     mysql-database: guacadb
-  #     mysql-username: guaca_nachos
-  #     mysql-password: P@ssword!
-  blockinfile:
-    path: /etc/guacamole/guacamole.properties
-    prepend_newline: true
-    block: |
+  copy:
+    dest: /etc/guacamole/guacamole.properties
+    content: |
       # MySQL
       mysql-hostname: 127.0.0.1
       mysql-port: 3306
@@ -155,10 +151,9 @@
       mysql-password: P@ssword!
 
 - name: Add database information in "guacd.conf" file
-  blockinfile:
-    path: /etc/guacamole/guacd.conf
-    prepend_newline: true
-    block: |
+  copy:
+    dest: /etc/guacamole/guacd.conf
+    content: |
       [server] 
       bind_host = 0.0.0.0
       bind_port = 4822
